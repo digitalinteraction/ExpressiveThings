@@ -1,4 +1,7 @@
 const noble = require("noble");
+const lifx = require("node-lifx");
+
+const LifxClient = lifx.Client;
 
 const AccNorm = 4096.0
 const GyroNorm = 0.07
@@ -13,13 +16,15 @@ const NotifyCharacUuid = "00000002-0008-A8BA-E311-F48C90364D99"
 
 noble.on("stateChange", (state) => {
 	console.log(`NOBLE: State - ${state}`);
-	if (state == "poweredOn") {
+	if (state === "poweredOn") {
 		console.log("NOBLE: Started scanning...");
 		noble.startScanning();
 	}
 });
 
-noble.on("discovered", (peripheral) => {
+noble.on("discover", (peripheral) => {
+	if (!peripheral || !peripheral.advertisment) return; 
+	console.log("NOBLE: Found - ${peripheral.advertisment.localName}.")
 	if (peripheral.advertisment.localName == "WAX9-0983") {
 		console.log(`NOBLE: Connecting to ${peripheral.advertisment.localName}...`);
 		peripheral.connect((error) => {
@@ -62,3 +67,14 @@ function processWaxData(data) {
 
 	console.log(ax, ay, az, gx, gy, gz, mx, my, mz);
 }
+
+const lifxClient = new LifxClient();
+
+lifxClient.on("light-new", (light) => {
+	light.getState((error, data) => {
+		console.log(data);
+	});
+});
+
+console.log("LIFX: Starting client...");
+lifxClient.init();
