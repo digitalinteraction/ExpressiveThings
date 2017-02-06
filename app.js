@@ -24,14 +24,15 @@ noble.on("stateChange", (state) => {
 
 noble.on("discover", (peripheral) => {
 	if (!peripheral || !peripheral.advertisment) return; 
-	console.log("NOBLE: Found - ${peripheral.advertisment.localName}.")
-	if (peripheral.advertisment.localName == "WAX9-0983") {
-		console.log(`NOBLE: Connecting to ${peripheral.advertisment.localName}...`);
+	let name = peripheral.advertisment.localName;
+	console.log("NOBLE: Found - ${name}.")
+	if (name == "WAX9-0983") {
+		console.log(`NOBLE: Connecting to ${name}...`);
 		peripheral.connect((error) => {
-			console.log(`NOBLE: Connected - ${peripheral.advertisment.localName}.`);
-			console.log(`NOBLE: Discovering Characteristics - ${peripheral.advertisment.localName}.`);
+			console.log(`NOBLE: Connected - ${name}.`);
+			console.log(`NOBLE: Discovering Characteristics - ${name}.`);
 			peripheral.discoverAllServicesAndCaracteristics((error, services, characteristics) => {
-				console.log(`NOBLE: ${peripheral.advertisment.localName}, Services: ${services.length}, Characteristics: ${characteristics.length}.`);
+				console.log(`NOBLE: ${name}, Services: ${services.length}, Characteristics: ${characteristics.length}.`);
 				setupWaxStream(peripheral, services, characteristics);
 			});
 		});
