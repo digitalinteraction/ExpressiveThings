@@ -23,8 +23,8 @@ noble.on("stateChange", (state) => {
 });
 
 noble.on("discover", (peripheral) => {
-	if (!peripheral || !peripheral.advertisment) return; 
-	let name = peripheral.advertisment.localName;
+	if (!peripheral || !peripheral.advertisement) return; 
+	let name = peripheral.advertisement.localName;
 	console.log("NOBLE: Found - ${name}.")
 	if (name == "WAX9-0983") {
 		console.log(`NOBLE: Connecting to ${name}...`);
