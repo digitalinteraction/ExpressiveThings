@@ -3,16 +3,18 @@ const lifx = require("node-lifx");
 
 const LifxClient = lifx.Client;
 
-const AccNorm = 4096.0
+const AccNorm = 1.0 / 4096.0
 const GyroNorm = 0.07
 const MagNorm = 0.1
 
-const SampleRateServiceUuid = "00000005-0008-A8BA-E311-F48C90364D99"
-const ReadServiceUuid = "00000000-0008-A8BA-E311-F48C90364D99"
+const SampleRateCharacUuid = "0000000a0008a8bae311f48c90364d99"
+const StreamCharacUuid = "000000010008a8bae311f48c90364d99"
+const NotifyCharacUuid = "000000020008a8bae311f48c90364d99"
 
-const SampleRateCharacUuid = "0000000A-0008-A8BA-E311-F48C90364D99"
-const StreamCharacUuid = "00000001-0008-A8BA-E311-F48C90364D99"
-const NotifyCharacUuid = "00000002-0008-A8BA-E311-F48C90364D99"
+var lights = [];
+var focussedLight;
+
+var currentAngle = 0;
 
 noble.on("stateChange", (state) => {
 	console.log(`NOBLE: State - ${state}`);
@@ -25,13 +27,13 @@ noble.on("stateChange", (state) => {
 noble.on("discover", (peripheral) => {
 	if (!peripheral || !peripheral.advertisement) return; 
 	let name = peripheral.advertisement.localName;
-	console.log("NOBLE: Found - ${name}.")
+	console.log(`NOBLE: Found - ${name}.`)
 	if (name == "WAX9-0983") {
 		console.log(`NOBLE: Connecting to ${name}...`);
 		peripheral.connect((error) => {
 			console.log(`NOBLE: Connected - ${name}.`);
 			console.log(`NOBLE: Discovering Characteristics - ${name}.`);
-			peripheral.discoverAllServicesAndCaracteristics((error, services, characteristics) => {
+			peripheral.discoverAllServicesAndCharacteristics((error, services, characteristics) => {
 				console.log(`NOBLE: ${name}, Services: ${services.length}, Characteristics: ${characteristics.length}.`);
 				setupWaxStream(peripheral, services, characteristics);
 			});
@@ -40,40 +42,54 @@ noble.on("discover", (peripheral) => {
 });
 
 function setupWaxStream(peripheral, services, characteristics) {
-	let sampleRateCharac = characteristic.find((charac) =>  charac.uuid == sampleRateCharacUuid)
-	let notifyCharac = characteristic.find((charac) =>  charac.uuid == NotifyCharacUuid)
-	let streamCharac = characteristic.find((charac) =>  charac.uuid == StreamCharacUuid)
+	let sampleRateCharac = characteristics.find((charac) =>  { return charac.uuid === SampleRateCharacUuid });
+	let notifyCharac = characteristics.find((charac) => { return charac.uuid === NotifyCharacUuid });
+	let streamCharac = characteristics.find((charac) => { return charac.uuid === StreamCharacUuid });
 
-	sampleRateCharac.write(Buffer.from([50]), false);
+	sampleRateCharac.write(Buffer.from([10]), false);
 	notifyCharac.subscribe();
 	streamCharac.write(Buffer.from([1]));
 
 	notifyCharac.on("data", (data) => {
 		processWaxData(data);
 	});
+
+	console.log(`NOBLE: ${peripheral.advertisement.localName} - Connected and Streaming!!`);
 }
 
 function processWaxData(data) {
-	let ax = ((buffer[ 3] << 8) + buffer[ 2]) / AccNorm
-	let ay = ((buffer[ 5] << 8) + buffer[ 4]) / AccNorm
-	let az = ((buffer[ 7] << 8) + buffer[ 6]) / AccNorm
+	let ax = data.readInt16LE(2) * AccNorm; //((data[ 3] << 8) + data[ 2]) * AccNorm;
+	let ay = data.readInt16LE(4) * AccNorm; //((data[ 5] << 8) + data[ 4]) * AccNorm;
+	let az = data.readInt16LE(6) * AccNorm; //((data[ 7] << 8) + data[ 6]) * AccNorm;
 
-	let gx = ((buffer[ 9] << 8) + buffer[ 8]) * GyroNorm
-	let gy = ((buffer[11] << 8) + buffer[10]) * GyroNorm
-	let gz = ((buffer[13] << 8) + buffer[12]) * GyroNorm
+	let gx = data.readInt16LE( 8) * GyroNorm;
+	let gy = data.readInt16LE(10) * GyroNorm;
+	let gz = data.readInt16LE(12) * GyroNorm;
 
-	let mx = ((buffer[15] << 8) + buffer[14]) * MagNorm
-	let my = ((buffer[17] << 8) + buffer[16]) * MagNorm
-	let mz = ((buffer[19] << 8) + buffer[18]) * MagNorm
+	let mx = data.readInt16LE(14) * MagNorm;
+	let my = data.readInt16LE(16) * MagNorm;
+	let mz = data.readInt16LE(18) * MagNorm;
+	
+	if (focussedLight) {
+		currentAngle += gx / 8.0;
 
-	console.log(ax, ay, az, gx, gy, gz, mx, my, mz);
+		currentAngle = Math.min(Math.max(currentAngle,0),100)
+		focussedLight.color(180, 50, currentAngle, 2500);
+	}
 }
 
 const lifxClient = new LifxClient();
 
 lifxClient.on("light-new", (light) => {
+	console.log("LIFX: New light seen.");
+	lights.push(light);
+});
+
+lifxClient.on("light-online", (light) => {
+	console.log("LIFX: Light switched on, now focussed.");
 	light.getState((error, data) => {
-		console.log(data);
+		currentAngle = data.color.brightness;
+		focussedLight = light;
 	});
 });
 
