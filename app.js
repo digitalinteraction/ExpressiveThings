@@ -1,5 +1,7 @@
 const noble = require("noble");
 const lifx = require("node-lifx");
+const hue = require("philips-hue");
+const alexa = require("alexa-sdk");
 
 const LifxClient = lifx.Client;
 
@@ -58,9 +60,9 @@ function setupWaxStream(peripheral, services, characteristics) {
 }
 
 function processWaxData(data) {
-	let ax = data.readInt16LE(2) * AccNorm; //((data[ 3] << 8) + data[ 2]) * AccNorm;
-	let ay = data.readInt16LE(4) * AccNorm; //((data[ 5] << 8) + data[ 4]) * AccNorm;
-	let az = data.readInt16LE(6) * AccNorm; //((data[ 7] << 8) + data[ 6]) * AccNorm;
+	let ax = data.readInt16LE(2) * AccNorm;
+	let ay = data.readInt16LE(4) * AccNorm;
+	let az = data.readInt16LE(6) * AccNorm;
 
 	let gx = data.readInt16LE( 8) * GyroNorm;
 	let gy = data.readInt16LE(10) * GyroNorm;
@@ -95,3 +97,9 @@ lifxClient.on("light-online", (light) => {
 
 console.log("LIFX: Starting client...");
 lifxClient.init();
+
+const hueClient = new hue();
+
+console.log("HUE: Starting client...");
+hueClient.getBridges();
+

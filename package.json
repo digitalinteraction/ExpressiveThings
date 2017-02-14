@@ -13,7 +13,10 @@
   "author": "Gerard Wilkinson",
   "license": "ISC",
   "dependencies": {
+    "alexa-app-server": "^3.0.0",
+    "alexa-sdk": "^1.0.6",
     "noble": "^1.7.0",
-    "node-lifx": "^0.8.0"
+    "node-lifx": "^0.8.0",
+    "philips-hue": "^1.2.0"
   }
 }
