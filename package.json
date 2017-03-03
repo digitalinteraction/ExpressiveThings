@@ -17,6 +17,7 @@
     "alexa-sdk": "^1.0.6",
     "noble": "^1.7.0",
     "node-lifx": "^0.8.0",
-    "philips-hue": "^1.2.0"
+    "huejay": "^1.5.0",
+    "ahrs": "^1.1.6"
   }
 }
