@@ -4,7 +4,11 @@ const huejay = require("huejay");
 const alexa = require("alexa-sdk");
 const fs = require("fs");
 
-const wax9 = require("./wax9.js");
+const DataCache = require("./dataCache.js");
+const Wax9Processor = require("./wax9Processor.js");
+const Wax9 = require("./wax9.js");
+const PoseRecognizer = require("./poseRecognizer.js");
+const SwirlReognizer = require("./swirlRecognizer.js");
 
 const SampleRateCharacUuid = "0000000a0008a8bae311f48c90364d99";
 const StreamCharacUuid = "000000010008a8bae311f48c90364d99";
@@ -18,16 +22,11 @@ const Config = {
 	downModeUpperThreshold: -0.6
 };
 
-const Modes = {
-	up: 0,
-	neutral: 1,
-	down: 2
-}
-
 let hueUsername = "9h6bo-KJwgCZ59Huwidt2LDp2S0zGDaFvfxj4YAr";
+
 let currentHueClient;
 let focussedLight;
-let currentMode = Modes.neutral;
+let lastTwirl;
 
 let lightUpdate = (brightness) => {};
 
@@ -43,7 +42,7 @@ noble.on("discover", (peripheral) => {
 	if (!peripheral || !peripheral.advertisement) return; 
 	let name = peripheral.advertisement.localName;
 	console.log(`NOBLE: Found - ${name}.`)
-	if (name == "WAX9-0983") {
+	if (name == "WAX9-0A27") {
 		console.log(`NOBLE: Connecting to ${name}...`);
 		peripheral.connect((error) => {
 			console.log(`NOBLE: Connected - ${name}.`);
@@ -65,43 +64,38 @@ function setupWaxStream(peripheral, services, characteristics) {
 	notifyCharac.subscribe();
 	streamCharac.write(Buffer.from([1]));
 
-	let device = new wax9(10);
-	let lastAngle = 0;
+	let dataCache = new DataCache(100);
+	let processor = new Wax9Processor(10);
+	let poseRecognizer = new PoseRecognizer(dataCache);
+	let swirlRecognizer = new SwirlReognizer(dataCache, poseRecognizer, 100);
+
+	let pose = 1;
+
+	poseRecognizer.on("stateChanged", ((state) => {
+		pose = state;
+		if (state == 2) {
+			focussedLight = undefined;
+		}
+	}).bind(this));
+
+	swirlRecognizer.on("twirl", (() => {
+		console.log("ET: TWIRL");
+		lastTwirl = new Date();
+	}).bind(this));
+	
 	let currentBrightness = 50;
 	let currentColorTemp = 50;
 
 	notifyCharac.on("data", (data) => {
-		device.updateFromBytes(data);
+		let pd = processor.updateFromBytes(data);
+		dataCache.add(pd);
 
 		if (focussedLight) {
-			let euler = device.euler;
-			let change = lastAngle - euler.z;
-
-			if (currentMode == Modes.neutral) {
-				if (euler.y > Config.upModeLowerThreshold) {
-					currentMode = Modes.up;
-					console.log(`CHANGED MODE: ${currentMode}`);
-				} /*else if (euler.y < Config.downModeUpperThreshold) {
-					currentMode = Modes.down;
-					console.log(`CHANGED MODE: ${currentMode}`);
-					focussedLight = undefined;
-				}*/ else {
-					currentBrightness += change * 20;
-					currentBrightness = Math.min(Math.max(currentBrightness,0),100)
-					updateHueBrightness(currentHueClient, focussedLight, currentBrightness);
-				}
-			} else if (currentMode == Modes.up) {
-				if (euler.y < Config.neutralModeUpperThreshold) {
-					currentMode = Modes.neutral;
-					console.log(`CHANGED MODE: ${currentMode}`);
-				} else {
-					currentColorTemp += change * 20;
-					currentColorTemp = Math.min(Math.max(currentColorTemp,0),100)
-					updateHueColorTemp(currentHueClient, focussedLight, currentColorTemp);
-				}
+			if (pose == 1) {
+				currentBrightness += pd.gyro.x / 10.0;
+				currentBrightness = Math.min(Math.max(currentBrightness,0),100)
+				updateHueBrightness(currentHueClient, focussedLight, currentBrightness);
 			}
-
-			lastAngle = euler.z;
 		}
 	});
 
@@ -171,9 +165,24 @@ async function startHue() {
 				let current = lights.find((element) => { return element.uniqueId == l.uniqueId });
 
 				if (current.reachable != l.reachable && l.reachable) {
-					console.log(`LIGHT FOCUSSED: ${l.name}`);
-					currentHueClient = client;
-					focussedLight = l;
+					console.log("NEW REACHABLE");
+					console.log((new Date() - lastTwirl));
+					if (lastTwirl && (new Date() - lastTwirl) < 15000) {
+						lastTwirl = undefined;
+						let g = (await client.groups.getAll()).find((g) => {return g.lightIds.includes(l.id)});
+						turnOnHueRoomLights(client, g);
+					} else {
+						console.log(`LIGHT FOCUSSED: ${l.name}`);
+						currentHueClient = client;
+						focussedLight = l;
+					}
+				} else if (current.reachable != l.reachable && !l.reachable) {
+					console.log("NEW UNREACHABLE");
+					if (lastTwirl && (new Date() - lastTwirl) < 30000) {
+						lastTwirl = undefined;
+						let g = (await client.groups.getAll()).find((g) => {return g.lightIds.includes(l.id)});
+						turnOffHueRoomLights(client, g);
+					}
 				}
 			}
 
@@ -191,6 +200,18 @@ function updateHueColorTemp(client, light, ct) {
 	let r = 500 - 155;
 	light.colorTemp = Math.round(ct / 100.0 * r) + 155;
 	client.lights.save(light);
+}
+
+function turnOnHueRoomLights(client, group) {
+	console.log("HUE: TURNING GROUP ON");
+	group.on = true;
+	client.groups.save(group);
+}
+
+function turnOffHueRoomLights(client, group) {
+	console.log("HUE: TURNING GROUP OFF");
+	group.on = false;
+	client.groups.save(group);
 }
 
 startHue();
