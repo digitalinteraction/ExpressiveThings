@@ -1,4 +1,6 @@
-class Wax9 {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class Wax9Data {
     constructor(sampleNumber, timestamp, acc, gyro, mag, euler, grav, linAcc) {
         this.sampleNumber = sampleNumber;
         this.timestamp = timestamp;
@@ -10,5 +12,5 @@ class Wax9 {
         this.linAcc = linAcc;
     }
 }
-
-module.exports = Wax9;
+exports.Wax9Data = Wax9Data;
+//# sourceMappingURL=wax9Data.js.map

@@ -1,13 +1,17 @@
-const EventEmitter = require("events").EventEmitter;
+import { EventEmitter } from "events";
+import { ITimedData } from "./wax9Data";
 
-class DataCache extends EventEmitter {
-    constructor(limit) {
+export class DataCache<T extends ITimedData> extends EventEmitter {
+    limit: number;
+    cache: T[];
+
+    constructor(limit: number) {
         super();
         this.limit = limit;
-        this.cache = new Array(this.limit);
+        this.cache = new Array<T>(this.limit);
     }
 
-    add(data) {
+    add(data: T) {
         this.cache.push(data);
         let diff = this.cache.length - this.limit;
         for (let i = 0; i < diff; i++) {
@@ -17,9 +21,7 @@ class DataCache extends EventEmitter {
         this.emit("data", data);
     }
 
-    timeRange(start, end) {
+    timeRange(start: Date, end: Date) {
         return this.cache.filter(data => data.timestamp >= start && data.timestamp < end);
     }
 }
-
-module.exports = DataCache;

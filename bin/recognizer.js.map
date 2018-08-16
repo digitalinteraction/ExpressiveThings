@@ -1,0 +1,1 @@
+{"version":3,"file":"recognizer.js","sourceRoot":"","sources":["../src/recognizer.ts"],"names":[],"mappings":"AAAA,MAAM,YAAY,GAAG,OAAO,CAAC,QAAQ,CAAC,CAAC,YAAY,CAAC;AAEpD,MAAM,UAAW,SAAQ,YAAY;IACjC,YAAY,SAAS;QACjB,KAAK,EAAE,CAAC;QACR,IAAI,CAAC,SAAS,GAAG,SAAS,CAAC;IAC/B,CAAC;CACJ;AAED,MAAM,CAAC,OAAO,GAAG,UAAU,CAAC"}
