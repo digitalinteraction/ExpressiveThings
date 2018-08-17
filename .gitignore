@@ -56,3 +56,5 @@ typings/
 .env
 
 *.csv
+
+bin/

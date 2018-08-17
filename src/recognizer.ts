@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { DataCache } from "./dataCache";
-import { ITimedData } from "./wax9Data";
+import { ITimedData } from "./interfaces";
 
 export class Recognizer<T extends ITimedData> extends EventEmitter {
     dataCache: DataCache<T>;

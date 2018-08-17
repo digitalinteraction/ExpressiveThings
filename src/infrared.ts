@@ -1,4 +1,4 @@
-import * as Broadlink from "broadlinkjs";
+import Broadlink from "broadlinkjs";
 import { EventEmitter } from "events";
 
 export class InfraRed extends EventEmitter {

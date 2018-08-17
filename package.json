@@ -13,6 +13,7 @@
   "author": "Gerard Wilkinson",
   "license": "ISC",
   "dependencies": {
+    "@types/express": "^4.16.0",
     "@types/noble": "0.0.37",
     "@types/node-hue-api": "^2.3.0",
     "ahrs": "^1.1.6",

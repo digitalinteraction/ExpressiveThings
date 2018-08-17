@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { ITimedData } from "./wax9Data";
+import { ITimedData } from "./interfaces";
 
 export class DataCache<T extends ITimedData> extends EventEmitter {
     limit: number;

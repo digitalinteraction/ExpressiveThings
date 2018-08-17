@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Peripheral } from "noble";
+import * as noble from "noble";
 import { Wax9 } from "./wax9";
 
 export class SensorConnectionManager extends EventEmitter {
@@ -25,10 +25,10 @@ export class SensorConnectionManager extends EventEmitter {
     }
 
     stopScan() {
-        noble.stopScan();
+        noble.stopScanning();
     }
 
-    _discoveredDevice(peripheral: Peripheral) {
+    _discoveredDevice(peripheral: noble.Peripheral) {
         if (!peripheral || !peripheral.advertisement) return; 
         let name = peripheral.advertisement.localName;
         console.log(`NOBLE: Found - ${name}.`);
@@ -39,7 +39,7 @@ export class SensorConnectionManager extends EventEmitter {
                 console.log(`NOBLE: Discovering Characteristics - ${name}.`);
                 peripheral.discoverAllServicesAndCharacteristics((error, services, characteristics) => {
                     console.log(`NOBLE: ${name}, Services: ${services.length}, Characteristics: ${characteristics.length}.`);
-                    this.emit("discovered", new Wax9(peripheral, 10));
+                    this.emit("discovered", new Wax9(peripheral));
                 });
             });
         }

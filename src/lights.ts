@@ -1,12 +1,12 @@
 import { EventEmitter } from "events";
 import { HueApi, ILight, lightState, ILightGroup } from "node-hue-api";
-import { ILightManager, ILight as IGenericLight } from "./interfaces";
+import { ILightManager, ILight as IGenericLight, ILightGroup as IGenericLightGroup } from "./interfaces";
 
 export class HueManager extends EventEmitter implements ILightManager {
     client: HueApi;
     lightTimer: NodeJS.Timer;
 
-    groups: ILightGroup[];
+    groups: IGenericLightGroup[];
     lastLights: HueLight[];
 
     lightStatusInterval = 500;
@@ -15,7 +15,7 @@ export class HueManager extends EventEmitter implements ILightManager {
         super();
         this.client = new HueApi("blah", "blah");
 
-        this.client.getAllGroups().then((groups) => {
+        this.getGroups().then((groups) => {
             this.groups = groups;
         });
     }
@@ -23,6 +23,11 @@ export class HueManager extends EventEmitter implements ILightManager {
     async getLights() : Promise<HueLight[]> {
         let lights = await this.client.getLights();
         return lights.lights.map((light) => new HueLight(this.client, light));
+    }
+
+    async getGroups() : Promise<HueLightGroup[]> {
+        let groups = await this.client.getAllGroups();
+        return groups.map(g => new HueLightGroup(g));
     }
 
     startMonitoring() {
@@ -58,7 +63,19 @@ export class HueManager extends EventEmitter implements ILightManager {
         });
 
         this.lastLights = newLights;
-        this.groups = await this.client.getAllGroups();
+        this.groups = await this.getGroups();
+    }
+}
+
+export class HueLightGroup implements IGenericLightGroup {
+    id: string;
+    name: string;
+    lights: string[];
+
+    constructor(group: ILightGroup) {
+        this.id = group.id;
+        this.name = group.name;
+        this.lights = group.lights;
     }
 }
  
