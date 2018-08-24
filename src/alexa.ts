@@ -8,9 +8,9 @@ export class Alexa extends EventEmitter {
 
     constructor() {
         super();
-        this._setupApp();
-
         this.express = Express();
+        
+        this._setupApp();
     }
 
     _setupApp() {
@@ -19,7 +19,7 @@ export class Alexa extends EventEmitter {
         this.alexaApp.intent("ControlLightBrightness", {
                 "slots": { "room": "AMAZON.Room" }
             },
-            function(request, response) {
+            (request, response) => {
                 var room = request.slot("room");
                 this.emit("lightBrightness", room);
             }

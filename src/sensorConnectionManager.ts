@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as noble from "noble";
+import noble from "noble";
 import { Wax9 } from "./wax9";
 
 export class SensorConnectionManager extends EventEmitter {
