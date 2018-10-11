@@ -1,6 +1,8 @@
 import { EventEmitter } from "events";
-import { HueApi, ILight, lightState, ILightGroup } from "node-hue-api";
+import { HueApi, ILight, lightState, ILightGroup, nupnpSearch } from "node-hue-api";
 import { ILightManager, ILight as IGenericLight, ILightGroup as IGenericLightGroup } from "./interfaces";
+
+const hueUsername = "Tgveo90GWykzOptr3HaPfkbE0tMRr762aXVjLzxP";
 
 export class HueManager extends EventEmitter implements ILightManager {
     client: HueApi;
@@ -13,7 +15,7 @@ export class HueManager extends EventEmitter implements ILightManager {
 
     constructor() {
         super();
-        this.client = new HueApi("blah", "blah");
+        this.client = new HueApi("10.0.0.254", hueUsername);
 
         this.getGroups().then((groups) => {
             this.groups = groups;

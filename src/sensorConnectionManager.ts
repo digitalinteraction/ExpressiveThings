@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import noble from "noble";
+import noble, { Peripheral } from "noble";
 import { Wax9 } from "./wax9";
 
 export class SensorConnectionManager extends EventEmitter {
@@ -10,14 +10,12 @@ export class SensorConnectionManager extends EventEmitter {
     constructor() {
         super();
         noble.on("stateChange", (state: string) => {
-            console.log(`NOBLE: State - ${state}`);
             if (state === "poweredOn") {
-                console.log("NOBLE: Started scanning...");
                 this.emit("ready");
             }
         });
         
-        noble.on("discover", this._discoveredDevice);
+        noble.on("discover", (peripheral: Peripheral) => this._discoveredDevice(peripheral));
     }
 
     startScan() {
@@ -31,14 +29,10 @@ export class SensorConnectionManager extends EventEmitter {
     _discoveredDevice(peripheral: noble.Peripheral) {
         if (!peripheral || !peripheral.advertisement) return; 
         let name = peripheral.advertisement.localName;
-        console.log(`NOBLE: Found - ${name}.`);
+        console.log(name);
         if (name.substr(0, 5) == "WAX9-") {
-            console.log(`NOBLE: Connecting to ${name}...`);
             peripheral.connect((error) => {
-                console.log(`NOBLE: Connected - ${name}.`);
-                console.log(`NOBLE: Discovering Characteristics - ${name}.`);
                 peripheral.discoverAllServicesAndCharacteristics((error, services, characteristics) => {
-                    console.log(`NOBLE: ${name}, Services: ${services.length}, Characteristics: ${characteristics.length}.`);
                     this.emit("discovered", new Wax9(peripheral));
                 });
             });

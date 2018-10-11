@@ -11,15 +11,26 @@ let irReady = false;
 const sensors = new Array<Wax9>();
 const sensorManager = new SensorConnectionManager();
 
+sensorManager.on("ready", () => {
+    sensorManager.startScan();
+});
+
 sensorManager.on("discover", async (device: Wax9) => {
     await device.connect();
     sensors.push(device);
 
     sensorReady = true;
+
+    console.log("WAX9 CONNECTED!");
 });
 
 const ir = new InfraRed();
-ir.on("ready", () => irReady = true);
+ir.on("ready", () => 
+{
+    irReady = true;
+    console.log("IR BLASTER CONNECTED!");
+    ir.startListening();
+});
 
 const lightManager = new HueManager();
 const alexaApp = new Alexa();
