@@ -20,7 +20,7 @@ class SensorConnectionManager extends events_1.EventEmitter {
         noble_1.default.on("discover", (peripheral) => this._discoveredDevice(peripheral));
     }
     startScan() {
-        noble_1.default.startScanning([], true, (error) => { console.log(`Error -- ${error}`); });
+        noble_1.default.startScanning();
     }
     stopScan() {
         noble_1.default.stopScanning();

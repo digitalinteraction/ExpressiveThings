@@ -1,50 +1,49 @@
-// import { InfraRed } from "./infrared";
-// import { SensorConnectionManager } from "./sensorConnectionManager";
-// import { Wax9 } from "./wax9";
-// import { HueManager } from "./lights";
-// import { ExpressiveThings } from "./expressiveThings";
-// import { Alexa } from "./alexa";
-// let sensorReady = false;
-// let irReady = false;
-// const sensors = new Array<Wax9>();
-// const sensorManager = new SensorConnectionManager();
-// sensorManager.on("ready", () => {
-//     sensorManager.startScan();
-// });
-// sensorManager.on("discover", async (device: Wax9) => {
-//     await device.connect();
-//     sensors.push(device);
-//     sensorReady = true;
-//     console.log("WAX9 CONNECTED!");
-// });
-// const ir = new InfraRed();
-// ir.on("ready", () => 
-// {
-//     irReady = true;
-//     console.log("IR BLASTER CONNECTED!");
-//     ir.startListening();
-// });
-// const lightManager = new HueManager();
-// const alexaApp = new Alexa();
-// function checkReady() {
-//     setTimeout(() => {
-//         if (sensorReady && irReady)
-//         {
-//             const program = new ExpressiveThings(sensors[0], ir, lightManager, alexaApp);
-//             program.start();
-//         } else {
-//             checkReady();
-//         }
-//     }, 1000);
-// }
-// checkReady();
-const noble = require("noble");
-noble.on("stateChange", (state) => {
-    if (state === "poweredOn") {
-        noble.startScanning([], true, (error) => { console.log(error); });
-    }
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const infrared_1 = require("./infrared");
+const sensorConnectionManager_1 = require("./sensorConnectionManager");
+const lights_1 = require("./lights");
+const expressiveThings_1 = require("./expressiveThings");
+const alexa_1 = require("./alexa");
+let sensorReady = false;
+let irReady = false;
+const sensors = new Array();
+const sensorManager = new sensorConnectionManager_1.SensorConnectionManager();
+sensorManager.on("ready", () => {
+    sensorManager.startScan();
 });
-noble.on("discovered", (device) => {
-    console.log(device);
+sensorManager.on("discover", (device) => __awaiter(this, void 0, void 0, function* () {
+    yield device.connect();
+    sensors.push(device);
+    sensorReady = true;
+    console.log("WAX9 CONNECTED!");
+}));
+const ir = new infrared_1.InfraRed();
+ir.on("ready", () => {
+    irReady = true;
+    console.log("IR BLASTER CONNECTED!");
+    ir.startListening();
 });
+const lightManager = new lights_1.HueManager();
+const alexaApp = new alexa_1.Alexa();
+function checkReady() {
+    setTimeout(() => {
+        if (sensorReady && irReady) {
+            const program = new expressiveThings_1.ExpressiveThings(sensors[0], ir, lightManager, alexaApp);
+            program.start();
+        }
+        else {
+            checkReady();
+        }
+    }, 1000);
+}
+checkReady();
 //# sourceMappingURL=program.js.map
